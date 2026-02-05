@@ -99,7 +99,7 @@
                                 <input id="loginPassword" type="password" class="form-control" placeholder="••••••••" required>
                             </div>
                             <div class="col-12 d-grid">
-                                <button id="loginBtn" class="btn btn-info fw-semibold">Login</button>
+                                <button id="loginBtn" class="btn btn-info fw-semibold" type="submit">Login</button>
                             </div>
                             <div class="col-12 small-muted">
                                 Tip: Register first, then login.
@@ -154,8 +154,8 @@
             <!-- App Area (after login) -->
             <div id="appArea" class="d-none">
                 <ul class="nav nav-pills mb-4" id="tabs">
-                    <li class="nav-item"><button class="nav-link active" data-tab="tabProfile" type="button">Profile</button></li>
-                    <li class="nav-item"><button class="nav-link" data-tab="tabChangePass" type="button">Change password</button></li>
+                    <li id="profileBtn" class="nav-item"><button class="nav-link active" data-tab="tabProfile" type="button">Profile</button></li>
+                    <li  id="changePas" class="nav-item"><button class="nav-link" data-tab="tabChangePass" type="button">Change password</button></li>
                     <li class="nav-item"><button class="nav-link d-none" id="adminTabBtn" data-tab="tabAdmin" type="button">Admin</button></li>
                 </ul>
 
@@ -196,7 +196,7 @@
                                 </div>
 
                                 <div class="col-12 d-grid d-md-flex gap-2">
-                                    <button class="btn btn-info fw-semibold" type="submit">Save changes</button>
+                                    <button id="saveChange" class="btn btn-info fw-semibold" type="submit">Save changes</button>
                                     <button id="btnResetProfile" class="btn btn-outline-light" type="button">Reset</button>
                                 </div>
                             </form>
@@ -223,7 +223,7 @@
                                     <input id="newPass2" type="password" class="form-control" required>
                                 </div>
                                 <div class="col-12 d-grid d-md-flex">
-                                    <button class="btn btn-success fw-semibold" type="submit">Update password</button>
+                                    <button id="saveNewPas" class="btn btn-success fw-semibold" type="submit">Update password</button>
                                 </div>
                             </form>
                         </div>

@@ -1,18 +1,17 @@
 console.log()
 
 
-
 import 'dotenv/config';
-import express, {json} from 'express';
+import express from 'express';
 import cors from 'cors';
 import session from "express-session";
-import { readFile, writeFile } from "fs/promises";
+import {readFile, writeFile} from "fs/promises";
 import bcrypt from "bcrypt";
 
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 app.use(cors({
     origin: "http://localhost:63342",
     credentials: true
@@ -24,58 +23,61 @@ app.use(
         saveUninitialized: false,
         cookie: {
             httpOnly: true,
-            maxAge: 1000*60*60},
+            maxAge: 1000 * 60 * 60
+        },
     })
 )
 
 let users = [
-    {id:1,login:'mery@gmail.ru',password:'1234',role:'admin'}
+    {id: 1, login: 'mery@gmail.ru', password: '1234', role: 'admin'}
 
 ];
-app.post('/login', async (req,res)=>{
-    const {email,password} = req.body;
+app.post('/login', async (req, res) => {
+    const {email, password} = req.body;
 
 
-    const fileData = await readFile('users.json','utf-8');
+    const fileData = await readFile('users.json', 'utf-8');
     let data = JSON.parse(fileData);
 
     let user = false;
     if (data[email]) {
-         user = await bcrypt.compare(password ,data[email].password);
+        user = await bcrypt.compare(password, data[email].password);
     }
 
-    if(user){
-        req.session.user = user;
+    if (user) {
+        req.session.user = {
+            email: email
+
+        };
+
         return res.json(user)
     }
 
-    res.status(401).json({message:"Invalid login"})
+    res.status(401).json({message: "Invalid login"})
 })
 app.get('/', (req, res) => {
     if (req.session.user && req.session.user.role === 'admin') {
         res.json(users);
     } else {
-        res.json({message:'not admin'});
+        res.json({message: 'not admin'});
     }
 });
 
 
-
-
 app.post('/register', async (req, res) => {
-    const {name,email,password,isAdmin} = req.body;
-    if(!name || !email || !password) {
-        return res.status(400).json({message:'Fill all fields'});
+    const {name, email, password, isAdmin} = req.body;
+    if (!name || !email || !password) {
+        return res.status(400).json({message: 'Fill all fields'});
     }
-    const heashesPassword = await bcrypt.hash(password,10);
+    const heashesPassword = await bcrypt.hash(password, 10);
 
-    let val={id:Date.now(), name,email,password:heashesPassword,role:isAdmin?'admin':'user'};
+    let val = {id: Date.now(), name, email, password: heashesPassword, role: isAdmin ? 'admin' : 'user'};
 
     let data = {};
     try {
-        const fileData = await readFile('users.json','utf-8');
+        const fileData = await readFile('users.json', 'utf-8');
         data = JSON.parse(fileData);
-    }catch(err) {
+    } catch (err) {
         data = {}
     }
 
@@ -88,51 +90,92 @@ app.post('/register', async (req, res) => {
 });
 
 
-
-
-
-
 app.get('/profile', (req, res) => {
-    if(req.session.user){
+    if (req.session.user) {
         return res.json(req.session.user);
     }
-        res.json({message:'No logged in'});
+    res.json({message: 'No logged in'});
 
 })
 app.get('/logout', (req, res) => {
-    if(req.session.user){
+    if (req.session.user) {
         req.session.user = null;
         return res.json("Logged out");
     }
-    res.json({message:'No logged out'});
+    res.json({message: 'No logged out'});
 
 })
 
 
 app.get('/admin', (req, res) => {
-    if(req.session.user && req.session.user.role === 'admin'){
+    if (req.session.user && req.session.user.role === 'admin') {
         return res.json(users);
     }
-    res.status(403).json({message:'Access denied'});
+    res.status(403).json({message: 'Access denied'});
 })
-
-
-
-
 
 
 const PORT = process.env.PORT || 3001;
 
 
-app.get('/check/:psw',async (req, res) => {
-    const {psw} = req.params;
-    const isMatch = await bcrypt.compare(psw,'$2b$10$KnAX47bceEaaQkaJDnxwnO8rZeI6YBpj2x6TkIOfOyGxRPtULpmA.')
-    if(isMatch){
-        return res.json("chisht email or pass")
+// app.get('/check/:psw', async (req, res) => {
+//     const {psw} = req.params;
+//     const isMatch = await bcrypt.compare(psw, '$2b$10$KnAX47bceEaaQkaJDnxwnO8rZeI6YBpj2x6TkIOfOyGxRPtULpmA.')
+//     if (isMatch) {
+//         return res.json("chisht email or pass")
+//
+//     }
+//     res.json({message: 'Access denied'});
+// })
+app.post('/changePass', async (req, res) => {
+    const {  curPass, newPass, newPass2 } = req.body;
+    const email = req.session.user.email;
+    const fileData = await readFile('users.json', 'utf-8');
+    let data = JSON.parse(fileData);
 
+    if (!data[email]) {
+        return res.status(404).json({ message: "User not found" });
     }
-    res.json({message:'Access denied'});
-})
+
+    const isMatch = await bcrypt.compare(curPass, data[email].password);
+
+    if (!isMatch) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+    }
+    if (newPass !== newPass2) {
+        return res.status(400).json({ message: "New passwords do not match" });
+    }
+
+    const hashedPass = await bcrypt.hash(newPass, 10);
+
+    data[email].password = hashedPass;
+
+    await writeFile('users.json', JSON.stringify(data, null, 2));
+
+    return res.status(200).json({ message: "Password changed successfully" });
+});
+
+
+app.post('/changeName', async (req, res) => {
+    const { newName} = req.body;
+const email = req.session.user.email;
+    const fileData = await readFile('users.json', 'utf-8');
+    let data = JSON.parse(fileData);
+
+    if (!data[email]) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    if(newName){
+        data[email].name = newName;
+    }
+
+    await writeFile('users.json', JSON.stringify(data, null, 2));
+
+    return res.status(200).json({ message: "Name changed successfully" });
+});
+
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

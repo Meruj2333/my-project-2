@@ -99,4 +99,60 @@ $('#loginBtn').onclick = (e) => {
         })
         .catch(err => console.log(err));
 };
+$('#changePas').onclick = (e) => {
+    e.preventDefault();
+    $('#tabProfile').classList.add('d-none');
+    $('#tabChangePass').classList.remove('d-none');
+}
+$('#profileBtn').onclick = (e) => {
+    e.preventDefault();
+    $('#tabProfile').classList.remove('d-none');
+    $('#tabChangePass').classList.add('d-none');
+}
+$('#saveNewPas').onclick = (e) => {
+    e.preventDefault();
+   let curPass=$('#curPass').value
+    let newPass=$('#newPass').value
+    let newPass2=$('#newPass2').value
+    fetch('http://localhost:3001/changePass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ curPass, newPass, newPass2},)
+    })
+        .then(res => res.json())
+        .then(data => {
+            if(data.message){
+                alert(data.message);
+                return;
+            }
 
+            alert("change ✅");
+
+        })
+        .catch(err => console.log(err));
+
+}
+
+$('#saveChange').onclick = (e) => {
+    e.preventDefault();
+    let newName=$('#profileName').value
+    fetch('http://localhost:3001/changeName', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ newName})
+    })
+        .then(res => res.json())
+        .then(data => {
+            if(data.message){
+                alert(data.message);
+                return;
+            }
+
+            alert("change ✅");
+
+        })
+        .catch(err => console.log(err));
+
+}
